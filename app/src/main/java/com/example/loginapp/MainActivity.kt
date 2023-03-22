@@ -39,9 +39,11 @@ class MainActivity : AppCompatActivity() {
 
             if (v_UserExist)
             {
+                    val userType=db.getUserType(v_textUserName!!.text.trim().toString())
                     val prefs=getSharedPreferences("Myapp", Context.MODE_PRIVATE)
                     val editor=prefs.edit()
                     editor.putString("Username",v_textUserName!!.text.toString())
+                    editor.putString("UserType",userType)
                     editor.apply()
                     val v_NavIntent= Intent(this,Navigation::class.java);
                     startActivity(v_NavIntent)

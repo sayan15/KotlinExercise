@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.util.Log
 
 class DbHelper (context:Context):SQLiteOpenHelper(context,DATABASE_NAME,null,DATABASE_VERSION){
     companion object{
@@ -41,18 +42,23 @@ class DbHelper (context:Context):SQLiteOpenHelper(context,DATABASE_NAME,null,DAT
         db.insert(tblName,null,values)
     }
 
-    fun readAll():ArrayList<String>{
+    fun readAll(): MutableList<UsersList> {
         val db=this.readableDatabase
         var cursor: Cursor?=null
         val query="Select * from "+ tblName
+        val userdata= mutableListOf<UsersList>()
 
         cursor=db.rawQuery(query,null)
-        var items=ArrayList<String>()
+
         while(cursor.moveToNext()){
+            var userId=cursor.getInt(cursor.getColumnIndexOrThrow(userId))
             var strUsername=cursor.getString(cursor.getColumnIndexOrThrow(userFullName))
-            items.add(strUsername)
+            var password=cursor.getString(cursor.getColumnIndexOrThrow(userPssword))
+            var UserType=cursor.getString(cursor.getColumnIndexOrThrow(usertype))
+            val user=UsersList(userId,strUsername,password,UserType)
+            userdata.add(user)
         }
-        return items
+        return userdata
 
     }
 
@@ -69,5 +75,40 @@ class DbHelper (context:Context):SQLiteOpenHelper(context,DATABASE_NAME,null,DAT
         }
         cursor.close()
         return exists
+    }
+
+    fun getUserType(customer:String):String{
+        val db=this.readableDatabase
+        var cursor: Cursor?=null
+        val qry="select $usertype from $tblName where $userFullName='$customer'"
+
+         var v_usertype:String?=null
+        try {
+            cursor=db.rawQuery(qry,null)
+            if (cursor.moveToFirst()) {
+                v_usertype = cursor.getString(0)
+            }
+            cursor.close()
+
+        }catch (e:Exception)
+        {
+            Log.e(ContentValues.TAG,"Error getting user type")
+        }
+        return v_usertype.toString()
+    }
+
+    fun deleteCustomer(customerID:Int):Boolean{
+        val qry="Delete from $tblName where $userId=$customerID"
+        val db=this.writableDatabase
+        var result =false
+        try {
+            val cursor=db.execSQL(qry)
+            result=true
+        }catch (e:Exception)
+        {
+            Log.e(ContentValues.TAG,"Error Deleting")
+        }
+        db.close()
+        return result
     }
 }
